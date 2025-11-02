@@ -9,11 +9,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mangudaigb/conversation-memory/internal/handler"
+	"github.com/mangudaigb/conversation-memory/internal/repo"
+	"github.com/mangudaigb/conversation-memory/internal/svc"
 	"github.com/mangudaigb/dhauli-base/config"
 	"github.com/mangudaigb/dhauli-base/consumer"
 	"github.com/mangudaigb/dhauli-base/db"
 	"github.com/mangudaigb/dhauli-base/logger"
-	"github.com/mangudaigb/short-memory/internal"
 	"golang.org/x/net/context"
 )
 
@@ -34,38 +36,44 @@ func NewConversationServer(cfg *config.Config, log *logger.Logger) *Conversation
 	}
 }
 
-func SetupRouter(log *logger.Logger, cSvc internal.ConversationService) *gin.Engine {
+func SetupRouter(log *logger.Logger, iSvc svc.InteractionService, cSvc svc.ConversationService) *gin.Engine {
 	r := gin.Default()
-	cHandler := internal.NewContextHandler(log, cSvc)
-	chHandler := internal.NewContextHistoryHandler(log, chSvc)
+	interactionHandler := handler.NewInteractionHandler(log, iSvc)
+	conversationHandler := handler.NewConversationHandler(log, cSvc, iSvc)
 
-	contextRoutes := r.Group("/contexts")
+	routes := r.Group("/conversations")
 	{
-		contextRoutes.GET("/", cHandler.GetContextByFilter)
-		contextRoutes.GET("/:id", cHandler.GetContext)
-		contextRoutes.POST("/", cHandler.CreateContext)
-		contextRoutes.PATCH("/:id", cHandler.UpdateContext) // Using PATCH for partial updates
-		contextRoutes.DELETE("/:id", cHandler.DeleteContext)
+		routes.GET("", conversationHandler.GetConversationsForUser)
+		routes.GET("/:cid", conversationHandler.GetConversationById)
+		routes.POST("/", conversationHandler.CreateConversation)
+		routes.PATCH("/:cid", conversationHandler.UpdateConversation)
+		routes.DELETE("/:cid", conversationHandler.DeleteConversation)
+
+		interactionRoutes := routes.Group("/:cid/interactions")
+		{
+			interactionRoutes.GET("", interactionHandler.GetInteractionsForConversation)
+			interactionRoutes.GET("/:iid", interactionHandler.GetInteractionById)
+			interactionRoutes.POST("/", interactionHandler.CreateInteraction)
+			interactionRoutes.PATCH("/:iid", interactionHandler.UpdateInteraction)
+		}
 	}
-	contextHistoryRoutes := r.Group("/context-history")
-	{
-		contextHistoryRoutes.GET("/", chHandler.GetContextHistoryByContextID)
-		contextHistoryRoutes.GET("/:id", chHandler.GetContextHistory)
-	}
+
 	return r
 }
 
-func (s *ContextServer) Start() {
+func (s *ConversationServer) Start() {
 	mongoClient, err := db.NewMongoClient(s.cfg, s.log)
 	if err != nil {
 		s.log.Fatalf("Error creating mongo client: %v", err)
 	}
-	var cRepo = internal.NewContextRepository(s.cfg, s.log, *mongoClient.Client, "context")
-	var chRepo = internal.NewContextHistoryRepository(s.cfg, s.log, *mongoClient.Client, "context_history")
-	var chSvc = internal.NewContextHistoryService(s.log, chRepo)
-	var cSvc = internal.NewContextService(s.log, cRepo, chSvc)
+	var interactionHistoryRepo = repo.NewInteractionHistoryRepository(s.cfg, s.log, *mongoClient.Client, "interactions_history")
+	var interactionRepo = repo.NewMongoInteractionRepository(s.cfg, s.log, *mongoClient.Client, "interactions")
+	var conversationRepo = repo.NewConversationRepository(s.cfg, s.log, *mongoClient.Client, "conversations")
+	var conversationSvc = svc.NewConversationService(s.log, conversationRepo)
+	var interactionHistorySvc = svc.NewInteractionHistoryService(s.log, interactionHistoryRepo)
+	var interactionSvc = svc.NewInteractionService(s.log, interactionRepo, interactionHistorySvc, conversationSvc)
 
-	router := SetupRouter(s.log, cSvc, chSvc)
+	router := SetupRouter(s.log, interactionSvc, conversationSvc)
 
 	serverAddr := fmt.Sprintf(":%d", s.cfg.Server.Port)
 

@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/mangudaigb/conversation-memory/internal"
+	"github.com/mangudaigb/conversation-memory/pkg"
 	"github.com/mangudaigb/dhauli-base/config"
 	"github.com/mangudaigb/dhauli-base/consumer"
 	"github.com/mangudaigb/dhauli-base/discover"
 	"github.com/mangudaigb/dhauli-base/logger"
-	"github.com/mangudaigb/short-memory/internal"
 )
 
 func main() {
@@ -28,4 +29,6 @@ func main() {
 	csmr := consumer.NewKafkaConsumer(cfg, log, internal.MsgHandlerFunc)
 	defer csmr.Stop()
 
+	server := pkg.NewConversationServer(cfg, log)
+	server.Start()
 }
