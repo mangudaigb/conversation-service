@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/mangudaigb/conversation-memory/internal/handler"
-	"github.com/mangudaigb/conversation-memory/internal/svc"
-	"github.com/mangudaigb/conversation-memory/pkg/dhauli"
+	"github.com/mangudaigb/conversation-service/internal/handler"
+	"github.com/mangudaigb/conversation-service/internal/svc"
+	"github.com/mangudaigb/conversation-service/pkg/dhauli"
 	"github.com/mangudaigb/dhauli-base/consumer/messaging"
 	"github.com/mangudaigb/dhauli-base/logger"
 )
@@ -100,4 +100,11 @@ func (ih *InteractionMsgHandler) handleUpdate(ctx context.Context, msg messaging
 		}
 	}
 	return in, nil
+}
+
+func NewInteractionMsgHandler(log *logger.Logger, iSvc svc.InteractionService) *InteractionMsgHandler {
+	return &InteractionMsgHandler{
+		log:  log,
+		iSvc: iSvc,
+	}
 }

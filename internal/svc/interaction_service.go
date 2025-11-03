@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mangudaigb/conversation-memory/internal/repo"
-	"github.com/mangudaigb/conversation-memory/pkg/dhauli"
+	"github.com/mangudaigb/conversation-service/internal/repo"
+	"github.com/mangudaigb/conversation-service/pkg/dhauli"
 	"github.com/mangudaigb/dhauli-base/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

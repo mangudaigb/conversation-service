@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mangudaigb/conversation-memory/internal/svc"
-	"github.com/mangudaigb/conversation-memory/pkg/dhauli"
+	"github.com/mangudaigb/conversation-service/internal/svc"
+	"github.com/mangudaigb/conversation-service/pkg/dhauli"
 	"github.com/mangudaigb/dhauli-base/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

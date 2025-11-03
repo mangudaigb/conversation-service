@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/mangudaigb/conversation-memory/internal/handler"
-	"github.com/mangudaigb/conversation-memory/internal/svc"
-	"github.com/mangudaigb/conversation-memory/pkg/dhauli"
+	"github.com/mangudaigb/conversation-service/internal/handler"
+	"github.com/mangudaigb/conversation-service/internal/svc"
+	"github.com/mangudaigb/conversation-service/pkg/dhauli"
 	"github.com/mangudaigb/dhauli-base/consumer/messaging"
 	"github.com/mangudaigb/dhauli-base/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -27,6 +27,9 @@ func (cmh *ConversationMsgHandler) ConversationHandlerFunc(ctx context.Context, 
 		out, err = cmh.cSvc.UpdateInteractionAnswer(ctx, message.ID, dhauli.InteractionStub{})
 	} else if action == "get" {
 		out, err = cmh.cSvc.GetConversationById(ctx, message.ID)
+	} else {
+		cmh.log.Errorf("Invalid action: %s", action)
+		return nil, errors.New("invalid action")
 	}
 	return out, err
 }
@@ -110,3 +113,10 @@ func (cmh *ConversationMsgHandler) handleGet(ctx context.Context, msg messaging.
 //	)
 //	return &responseEnv
 //}
+
+func NewConversationMsgHandler(log *logger.Logger, cSvc svc.ConversationService) *ConversationMsgHandler {
+	return &ConversationMsgHandler{
+		log:  log,
+		cSvc: cSvc,
+	}
+}

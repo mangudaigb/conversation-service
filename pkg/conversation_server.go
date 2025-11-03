@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mangudaigb/conversation-memory/internal/handler"
-	"github.com/mangudaigb/conversation-memory/internal/repo"
-	"github.com/mangudaigb/conversation-memory/internal/svc"
+	"github.com/mangudaigb/conversation-service/internal/handler"
+	"github.com/mangudaigb/conversation-service/internal/repo"
+	"github.com/mangudaigb/conversation-service/internal/svc"
 	"github.com/mangudaigb/dhauli-base/config"
 	"github.com/mangudaigb/dhauli-base/consumer"
 	"github.com/mangudaigb/dhauli-base/db"
 	"github.com/mangudaigb/dhauli-base/logger"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/net/context"
 )
 
@@ -27,12 +28,14 @@ type HttpServer struct {
 type ConversationServer struct {
 	log *logger.Logger
 	cfg *config.Config
+	tr  trace.Tracer
 }
 
-func NewConversationServer(cfg *config.Config, log *logger.Logger) *ConversationServer {
+func NewConversationServer(cfg *config.Config, tr trace.Tracer, log *logger.Logger) *ConversationServer {
 	return &ConversationServer{
 		log: log,
 		cfg: cfg,
+		tr:  tr,
 	}
 }
 
